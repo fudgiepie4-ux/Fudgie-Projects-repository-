@@ -19,7 +19,7 @@ Open http://127.0.0.1:3000. `npm run dev` builds and starts the app; restart it 
 ### What works
 
 - **Family Research Center:** ancestor, relationship, biography, timeline, discovery, source, and chapter records; dates, investigator ownership, work progress, and chapter approval counts.
-- **Clara + Muse Mission Control:** assignments, questions, audits, handoffs, approvals, and completed investigations. Paste original handoff/review text manually; there is no automatic assistant integration.
+- **Clara + Muse Mission Control:** assignments, questions, audits, handoffs, approvals, and completed investigations. Paste original handoff/review text manually. Existing Airtable research can be imported with the local [staging importer](docs/IMPORT.md); there is no automatic assistant integration.
 - **Shared Master Archive:** one persistent SQLite database and immutable original file storage. Upload PDFs, newspaper scans, photographs, and research files up to 25 MB. Exact duplicate files reuse one document ID, and both workspaces link the same document or record without copying it.
 - Search titles, research text, reviewers' verification statuses, assignees, and citations; the document list filters by filename.
 - Named human reviews with a rationale and all five statuses: Confirmed, Probable, Unverified, Conflicting, Disproven. All new records start Unverified, regardless of values supplied to intake.
@@ -39,4 +39,4 @@ The approval counter shows chapter approvals, not a guarantee that their evidenc
 
 ### Next priorities
 
-Import the real research and outline the book first. Then add chapter ordering/print layout and richer claim-to-paragraph citations. Before family-wide access, configure authenticated private hosting and backups. Typed relationship endpoints, historical date sorting, bulk imports, concurrent editing protection, and pagination can follow the book's immediate needs.
+The staged Airtable handoff can now be imported using [docs/IMPORT.md](docs/IMPORT.md). Outline the book next. Then add chapter ordering/print layout and richer claim-to-paragraph citations. Before family-wide access, configure authenticated private hosting and backups. Typed relationship endpoints, historical date sorting, in-app import UI, concurrent editing protection, and pagination can follow the book's immediate needs.

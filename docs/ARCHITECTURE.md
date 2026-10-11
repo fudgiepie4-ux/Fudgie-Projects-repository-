@@ -5,6 +5,7 @@
 - src/store.ts: input validation, persistent SQLite schema, transactions, revision snapshots, evidence graph, and export eligibility.
 - src/server.ts: Node HTTP routes, request limits, same-origin checks, immutable file intake, attachments, and static UI serving.
 - scripts/build.mjs: native TypeScript-to-JavaScript stripping for browser files.
+- scripts/import-staging.mjs: validated transactional Airtable JSON/CSV onboarding; all original content and QC decisions preserved in local SQLite sidecar tables, no automatic approvals or evidence links.
 - tests/archive.test.ts: database and in-process HTTP handler integration tests using temporary data.
 
 ## Shared schema
@@ -17,6 +18,6 @@ Review confirmation requires linked evidence but does not claim the software eva
 
 ## Scope and limitations
 
-This is a local-first MVP for a small research collection. No account/role system, bulk importer, automatic Clara/Muse integration, OCR, genealogy graph visualization, inline photo layout, revision rollback, or print-ready PDF generator. Chapters are free text with record-level citations; claim-level structure is created manually in Discovery/Timeline records. Reviewing prose and linking every claim are human responsibilities. Completion of tasks is independent from book eligibility. SQLite is persistent and shared between modules but is not a hosted database service.
+This is a local-first MVP for a small research collection. No account/role system, browser bulk-import UI, automatic Clara/Muse integration, OCR, genealogy graph visualization, inline photo layout, revision rollback, or print-ready PDF generator. Chapters are free text with record-level citations; claim-level structure is created manually in Discovery/Timeline records. Reviewing prose and linking every claim are human responsibilities. Completion of tasks is independent from book eligibility. SQLite is persistent and shared between modules but is not a hosted database service.
 
 Browser compilation strips types; it does not run a static TypeScript type checker. tsconfig.json remains for editors and future tsc checks. Records are fetched as a collection and searched client-side; pagination and full-text indexes are deferred. There is no optimistic concurrency control yet; use one active editor per record. Uploaded originals and previous record snapshots remain preserved.

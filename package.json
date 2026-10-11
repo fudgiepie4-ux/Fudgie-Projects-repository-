@@ -10,6 +10,7 @@
     "dev": "npm run build && node src/server.ts",
     "build": "node scripts/build.mjs",
     "start": "node src/server.ts",
-    "test": "node --test --test-isolation=none tests/*.test.ts"
+    "test": "node --test --test-isolation=none tests/*.test.ts",
+    "import:staging": "node scripts/import-staging.mjs"
   }
 }
