@@ -54,8 +54,13 @@ export function prepareImport(exportData,crosswalk,inventoryText,{includeHeartbe
     assert(!seen.has(id),'Duplicate crosswalk record '+id);seen.add(id);
     const kind=item.app_kind==='MissionWork'?'Assignment':item.app_kind;
     const heartbeat=item.original_table==='Activity Log'&&item.app_status==='Heartbeat';
+    const operational=item.original_table==='Activity Log';
+    const qc=text(source.fields?.['QC Status']);
+    const excluded=item.final_tier==='EXCLUDED'||text(source.fields?.['Proposed Tier'])==='EXCLUDED'||item.app_status==='Rejected'||qc==='Rejected';
+    assert(!operational||kind===null,'Activity Log must be audit-only: '+id);
+    assert(!excluded||kind===null,'Rejected/EXCLUDED records must be audit-only: '+id);
     if(kind!==null)assert(allowedKinds.has(kind),'Unsupported app kind '+kind+' for '+id);
-    const appId=kind&&(!heartbeat||includeHeartbeats)?'airtable:'+id:null;
+    const appId=kind?'airtable:'+id:null;
     if(appId)mapped.push({id:appId,kind,item,source});
     preserved.push({id,table:source.original_table,source,item,appId});
     for(const target of item.linked_record_ids||[]) {
@@ -74,7 +79,12 @@ function text(value){if(typeof value==='string')return value;if(value&&typeof va
 function appRecord(row){
   const {id,kind,item,source}=row;
   const title=(text(item.title)||text(item.original_key)||id).slice(0,300);
-  const full=`${text(item.summary)}\n\nOriginal Airtable fields:\n${JSON.stringify(source.fields??{},null,2)}`;
+  const qc=item.original_status_fields??{};
+  const proposedTier=text(qc['Proposed Tier'])||text(source.fields?.['Proposed Tier'])||'UNESTABLISHED';
+  const finalTier=text(item.final_tier)||'UNESTABLISHED';
+  const tierDescription=finalTier==='ACCESS GAP'?'ACCESS GAP (source-access condition, not an evidence strength)':finalTier;
+  const reviewContext=kind==='Discovery'?`Staging evidence metadata (NOT an app verification):\nProposed evidence tier: ${proposedTier}\nFinal evidence tier: ${tierDescription}\nFinal tier source: ${text(item.final_tier_source)||'unknown'}\nOriginal QC decision: ${text(qc['QC Status'])||text(source.fields?.['QC Status'])||'none'}\n\n`:'';
+  const full=`${text(item.summary)}\n\n${reviewContext}Original Airtable fields:\n${JSON.stringify(source.fields??{},null,2)}`;
   // A full, byte-exact copy of the export is kept separately in import_payloads.
   const body=full.length<=100000?full:full.slice(0,99950)+'\n[See preserved original export for remaining fields]';
   const fields=source.fields??{};
