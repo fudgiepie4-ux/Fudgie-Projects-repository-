@@ -27,15 +27,15 @@ npm start
 ## Exact mapping and review treatment
 
 - All **1,185 Airtable records** and all three original input-file texts are preserved verbatim in the new SQLite `import_payloads` table; every record and crosswalk mapping is indexed in `external_rows`.
-- **505 searchable application records** are created from ancestors (10), relationships (10), sources (22), assignments (34), results and leads (278), and substantive timeline events (151).
-- 314 QC reviews, one excluded candidate, and 365 routine heartbeats are retained in the raw archive but omitted from the main research view. The 2,374 original linked-record references remain in `external_edges` and are not automatically treated as evidence citations.
+- Under **Crosswalk v3**, **350 application records** are eligible for import: ancestors (10), relationships (10), sources (22), assignments (34), and discoveries/leads (274). There are no imported Timeline records from the Activity Log.
+- **835 audit-only records** remain in the raw archive: all 516 Activity Log items (365 heartbeats plus 151 operational events), 314 QC reviews, 4 excluded/rejected research results, and 1 excluded candidate. The 2,374 original linked-record references remain in `external_edges` and are not automatically treated as evidence citations.
 - The crosswalk term `MissionWork` becomes the app's `Assignment` record kind, while the original term is retained in the preserved mapping.
-- Every imported research record starts **Unverified**, with `book_approved=0`. Original approval decisions and evidence tiers stay in the preserved export; `Approved` in Airtable is not treated as a verified historical fact. Assignment completion is stored as task progress, not evidence confirmation.
+- Every imported research record starts **Unverified**, with `book_approved=0`. Proposed and final evidence-tier metadata are retained, and the importer includes the final tier and its source in Discovery record details; this is **not** automatic app verification. An `ACCESS GAP` value is labeled as an access condition, not an evidence-strength tier. `Approved` in Airtable is not treated as a confirmed historical fact. Assignment completion remains separate from evidence confirmation.
 - The 147 source inventory entries become reference-only `external_inventory` rows. Six over-25 MB PDFs remain at their existing Drive locations; the importer neither splits nor copies them.
 - Both records bearing the human key `MDS-0008` remain separate because their stable Airtable record IDs differ.
 
 ## Verification and boundaries
 
-A local test against Muse's 2026-10-11 handoff produced 505 imported app records and retained all 1,185 raw records, 2,374 reference edges, and 147 inventory entries. A second run produced zero duplicate records.
+An **earlier v1 local import** produced 505 app records, preserving all 1,185 raw records, 2,374 reference edges, and 147 inventory entries; it is superseded by v3. For v3, the expected import is **350 eligible app records plus 835 audit-only**. The regression suite uses synthetic fixtures; a full family-data database import and live browser acceptance test are still pending.
 
 This is **a local import utility**, not a live hosted application, remote sync, or print-ready birthday book. To work in a browser, run the Node application against the imported data directory. The current user interface displays searchable imported records, but it does not yet expose a specialized UI for browsing preserved QC audit tables. Independent reviews, evidence links, and chapter drafting still need dedicated follow-up work.
