@@ -15,8 +15,8 @@ const testPacket=()=>{
   const objects=[{original_table:'People',original_record_id:rid(1),app_kind:'Ancestor',app_status:'Active',title:'TEST ONLY ancestor',linked_record_ids:[rid(3)],summary:'TEST ONLY',original_status_fields:{Status:'Active'}},
     {original_table:'MDS Assignments',original_record_id:rid(2),app_kind:'MissionWork',app_status:'Done',title:'TEST ONLY mission',linked_record_ids:[]},
     {original_table:'QC Reviews',original_record_id:rid(3),app_kind:null,app_status:'Approve',title:'QC TEST ONLY',linked_record_ids:[rid(1)]},
-    {original_table:'Activity Log',original_record_id:rid(4),app_kind:'Timeline',app_status:'Heartbeat',title:'TEST heartbeat',linked_record_ids:[]},
-    {original_table:'Activity Log',original_record_id:rid(5),app_kind:'Timeline',app_status:'Event',title:'TEST event',linked_record_ids:[]}];
+    {original_table:'Activity Log',original_record_id:rid(4),app_kind:null,app_status:'Heartbeat',title:'TEST heartbeat',linked_record_ids:[]},
+    {original_table:'Activity Log',original_record_id:rid(5),app_kind:null,app_status:'Event',title:'TEST event',linked_record_ids:[]}];
   return {exportText:JSON.stringify({tables}),crosswalkText:JSON.stringify({crosswalk_meta:{total_objects:5},objects}),inventoryText:'name,location,drive_id,size_bytes,over_25mb,sha256,notes\r\n"test, source.pdf",Drive,id123,30000000,YES,,"notes, here"\r\n'};
 };
 
@@ -26,11 +26,11 @@ test('Lossless staging import is idempotent, keeps QC distinct, and does not aut
   const dir=mkdtempSync(join(tmpdir(),'fudgie-import-'));
   try{
     const packet=testPacket(),dry=importStaging({dataDir:dir,...packet,dryRun:true});
-    assert.equal(dry.airtableRecords,5);assert.equal(dry.appRecords,3);assert.equal(dry.preservedOnly,2);assert.equal(dry.over25MB,1);
-    const first=importStaging({dataDir:dir,...packet});assert.equal(first.createdAppRecords,3);assert.equal(first.createdRawRecords,5);
+    assert.equal(dry.airtableRecords,5);assert.equal(dry.appRecords,2);assert.equal(dry.preservedOnly,3);assert.equal(dry.over25MB,1);
+    const first=importStaging({dataDir:dir,...packet});assert.equal(first.createdAppRecords,2);assert.equal(first.createdRawRecords,5);
     const db=new Store(join(dir,'archive.sqlite'));
     try{
-      assert.equal(db.snapshot().records.length,3);
+      assert.equal(db.snapshot().records.length,2);
       assert.equal(db.snapshot().links.length,0); // Airtable relationships are NOT automatically evidence.
       assert.equal(db.db.prepare('SELECT COUNT(*) AS n FROM external_rows').get().n,5);
       assert.equal(db.db.prepare('SELECT COUNT(*) AS n FROM external_edges').get().n,2);
