@@ -4,12 +4,12 @@ import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
-import { createApp } from '../src/server.ts';
+import { createApp, validateNetworkHost } from '../src/server.ts';
 
 // Synthetic test data only. No private family names or original documents are stored in Git.
-async function started() {
+async function started(auth?:{username:string;password:string}) {
   const dir=mkdtempSync(join(tmpdir(),'fudgie-http-'));
-  const instance=createApp(dir);
+  const instance=createApp(dir,auth?{auth}:{});
   try {
     await new Promise<void>((resolve,reject)=>{
       instance.server.once('error',reject);
@@ -27,6 +27,34 @@ async function post(base:string,path:string,value:unknown){
   const response=await fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});
   return {status:response.status,payload:await response.json()};
 }
+test('public network binding fails closed without authentication and HTTPS gateway',()=>{
+  assert.doesNotThrow(()=>validateNetworkHost('127.0.0.1',{}));
+  assert.throws(()=>validateNetworkHost('0.0.0.0',{}),/Network listening requires/);
+  assert.throws(()=>validateNetworkHost('::',{'FUDGIE_AUTH_USER':'test','FUDGIE_AUTH_PASSWORD':'short','FUDGIE_HTTPS_PROXY_CONFIRMED':'YES'}),/Network listening requires/);
+  assert.doesNotThrow(()=>validateNetworkHost('0.0.0.0',{'FUDGIE_AUTH_USER':'test','FUDGIE_AUTH_PASSWORD':'synthetic-long-password-1234','FUDGIE_HTTPS_PROXY_CONFIRMED':'YES'}));
+});
+test('Basic authentication protects UI and every API path on a gated server',async()=>{
+  const username='test-only-user',password='synthetic-long-password-1234';
+  const app=await started({username,password});
+  try{
+    for(const path of ['/', '/api/archive', '/api/export/chapters', '/api/documents/not-found']){
+      const denied=await fetch(app.base+path,{redirect:'manual'});
+      assert.equal(denied.status,401,path);
+      assert.match(denied.headers.get('www-authenticate')??'',/Basic realm/);
+    }
+    const deniedPost=await fetch(app.base+'/api/records',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    assert.equal(deniedPost.status,401);
+    const basic='Basic '+Buffer.from(username+':'+password).toString('base64');
+    const archive=await fetch(app.base+'/api/archive',{headers:{Authorization:basic}});
+    assert.equal(archive.status,200);
+    const created=await fetch(app.base+'/api/records',{method:'POST',
+      headers:{Authorization:basic,'Content-Type':'application/json'},
+      body:JSON.stringify({kind:'Discovery',title:'TEST ONLY authorized',body:'Synthetic'})});
+    assert.equal(created.status,201);
+    const wrong=await fetch(app.base+'/api/archive',{headers:{Authorization:'Basic '+Buffer.from(username+':wrong').toString('base64')}});
+    assert.equal(wrong.status,401);
+  }finally{await app.close();}
+});
 test('real localhost HTTP requests exercise evidence, review and export gates',async()=>{
   const app=await started();
   try {
